@@ -118,7 +118,7 @@ class Heart:
 def draw(main: Tk, render_canvas: Canvas, render_heart: Heart, render_frame=0):
     render_canvas.delete('all')
     render_heart.render(render_canvas, render_frame)
-    main.after(160, draw, main, render_canvas, render_heart, render_frame + 1)
+    main.after(100, draw, main, render_canvas, render_heart, render_frame + 1)
 
 if __name__ == '__main__':
     root = Tk()
