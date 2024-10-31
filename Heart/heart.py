@@ -1,12 +1,15 @@
 import random
 from math import sin, cos, pi, log
 from tkinter import *
+
 CANVAS_WIDTH = 640
 CANVAS_HEIGHT = 640
 CANVAS_CENTER_X = CANVAS_WIDTH / 2
 CANVAS_CENTER_Y = CANVAS_HEIGHT / 2
 IMAGE_ENLARGE = 11
 HEART_COLOR = "#Fd798f"
+TEXT_COLOR = HEART_COLOR  # Same color as heart
+TEXT = "For Christine Chen"  # Customize the text here
 
 def heart_function(t, shrink_ratio: float = IMAGE_ENLARGE):
     x = 16 * (sin(t) ** 3)
@@ -43,7 +46,6 @@ class Heart:
         self._center_diffusion_points = set()
         self.all_points = {}
         self.build(2000)
-
         self.random_halo = 1000
         self.generate_frame = generate_frame
         for frame in range(generate_frame):
@@ -62,8 +64,8 @@ class Heart:
         point_list = list(self._points)
         for _ in range(4000):
             x, y = random.choice(point_list)
-            x, y = scatter_inside(x, y, 0,2)
-            self._center_diffusion_points.add((x, y))
+            x, y = scatter_inside(x, y, 0.2)
+
     @staticmethod
     def calc_position(x, y, ratio):
         force = 1 / (((x - CANVAS_CENTER_X) ** 2 + (y - CANVAS_CENTER_Y) ** 2) ** 0.520)
@@ -72,9 +74,9 @@ class Heart:
         return x - dx, y - dy
     
     def calc(self, generate_frame):
-        ratio = 15 * curve(generate_frame/ 15 * pi)
-        halo_radius = int(4 + 6 * (1 + curve(generate_frame/ 15 * pi)))
-        halo_number = int(3000 + 4000 * abs(curve(generate_frame/ 15 * pi) ** 2))
+        ratio = 15 * curve(generate_frame / 15 * pi)
+        halo_radius = int(4 + 6 * (1 + curve(generate_frame / 15 * pi)))
+        halo_number = int(3000 + 4000 * abs(curve(generate_frame / 15 * pi) ** 2))
         all_points = []
         heart_halo_point = set()
 
@@ -82,8 +84,8 @@ class Heart:
             t = random.uniform(0, 2 * pi)
             x, y = heart_function(t, shrink_ratio = 11.5)
             x, y = shrink(x, y, halo_radius)
-            if(x, y) not in heart_halo_point:
-                heart_halo_point.add((x,y))
+            if (x, y) not in heart_halo_point:
+                heart_halo_point.add((x, y))
                 x += random.randint(-16, 16)
                 y += random.randint(-16, 16)
                 size = random.choice((2, 2, 1))
@@ -98,15 +100,20 @@ class Heart:
             x, y = self.calc_position(x, y, ratio)
             size = random.randint(1, 2)
             all_points.append((x, y, size))
+        
         for x, y in self._center_diffusion_points:
-            x, y = self.calc_position(x, y , ratio)
+            x, y = self.calc_position(x, y, ratio)
             size = random.randint(1, 2)
             all_points.append((x, y, size))
+        
         self.all_points[generate_frame] = all_points
 
     def render(self, render_canvas, render_frame):
         for x, y, size in self.all_points[render_frame % self.generate_frame]:
-            render_canvas.create_rectangle(x, y, x + size, y + size, width = 0, fill = HEART_COLOR)
+            render_canvas.create_rectangle(x, y, x + size, y + size, width=0, fill=HEART_COLOR)
+        
+        # Add text in the center of the canvas
+        render_canvas.create_text(CANVAS_CENTER_X, CANVAS_CENTER_Y, text=TEXT, fill=TEXT_COLOR, font=("Arial", 24, "bold"))
 
 def draw(main: Tk, render_canvas: Canvas, render_heart: Heart, render_frame=0):
     render_canvas.delete('all')
@@ -116,7 +123,7 @@ def draw(main: Tk, render_canvas: Canvas, render_heart: Heart, render_frame=0):
 if __name__ == '__main__':
     root = Tk()
     root.title("Heart")
-    canvas = Canvas(root, bg = "black", height = CANVAS_HEIGHT, width = CANVAS_WIDTH)
+    canvas = Canvas(root, bg="black", height=CANVAS_HEIGHT, width=CANVAS_WIDTH)
     canvas.pack()
     heart = Heart()
     draw(root, canvas, heart)
