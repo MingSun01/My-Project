@@ -66,4 +66,58 @@ class Heart:
             self._center_diffusion_points.add((x, y))
     @staticmethod
     def calc_position(x, y, ratio):
+        force = 1 / (((x - CANVAS_CENTER_X) ** 2 + (y - CANVAS_CENTER_Y) ** 2) ** 0.520)
+        dx = ratio * force * (x - CANVAS_CENTER_X) + random.randint(-2, 2)
+        dy = ratio * force * (y - CANVAS_CENTER_Y) + random.randint(-2, 2)
+        return x - dx, y - dy
+    
+    def calc(self, generate_frame):
+        ratio = 15 * curve(generate_frame/ 15 * pi)
+        halo_radius = int(4 + 6 * (1 + curve(generate_frame/ 15 * pi)))
+        halo_number = int(3000 + 4000 * abs(curve(generate_frame/ 15 * pi) ** 2))
+        all_points = []
+        heart_halo_point = set()
+
+        for _ in range(halo_number):
+            t = random.uniform(0, 2 * pi)
+            x, y = heart_function(t, shrink_ratio = 11.5)
+            x, y = shrink(x, y, halo_radius)
+            if(x, y) not in heart_halo_point:
+                heart_halo_point.add((x,y))
+                x += random.randint(-16, 16)
+                y += random.randint(-16, 16)
+                size = random.choice((2, 2, 1))
+                all_points.append((x, y, size))
         
+        for x, y in self._points:
+            x, y = self.calc_position(x, y, ratio)
+            size = random.randint(1, 2)
+            all_points.append((x, y, size))
+
+        for x, y in self._edge_diffusion_points:
+            x, y = self.calc_position(x, y, ratio)
+            size = random.randint(1, 2)
+            all_points.append((x, y, size))
+        for x, y in self._center_diffusion_points:
+            x, y = self.calc_position(x, y , ratio)
+            size = random.randint(1, 2)
+            all_points.append((x, y, size))
+        self.all_points[generate_frame] = all_points
+
+    def render(self, render_canvas, render_frame):
+        for x, y, size in self.all_points[render_frame % self.generate_frame]:
+            render_canvas.create_rectangle(x, y, x + size, y + size, width = 0, fill = HEART_COLOR)
+
+def draw(main: Tk, render_canvas: Canvas, render_heart: Heart, render_frame=0):
+    render_canvas.delete('all')
+    render_heart.render(render_canvas, render_frame)
+    main.after(160, draw, main, render_canvas, render_heart, render_frame + 1)
+
+if __name__ == '__main__':
+    root = Tk()
+    root.title("Heart")
+    canvas = Canvas(root, bg = "black", height = CANVAS_HEIGHT, width = CANVAS_WIDTH)
+    canvas.pack()
+    heart = Heart()
+    draw(root, canvas, heart)
+    root.mainloop()
